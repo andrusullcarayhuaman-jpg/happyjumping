@@ -1,0 +1,110 @@
+/*
+ * =========================================
+ * ESTILOS DE LA PÁGINA DE PERFIL
+ * =========================================
+ */
+.profile-header {
+    background: linear-gradient(90deg, var(--morado), var(--rosa));
+    color: white;
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+}
+.profile-header h2 {
+    margin: 0;
+    font-weight: 700;
+}
+
+.reserva-card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    margin-bottom: 25px;
+    border-left: 5px solid var(--morado); /* Borde por defecto */
+    display: flex;
+    flex-wrap: wrap; /* Para responsive */
+}
+
+.reserva-card-body {
+    padding: 20px 25px;
+    flex: 3; /* Ocupa 3/4 del espacio */
+    min-width: 300px;
+}
+.reserva-card-body h5 {
+    font-weight: 700;
+    color: var(--morado);
+}
+.reserva-card-body p {
+    margin-bottom: 5px;
+    color: #555;
+    font-weight: 500;
+}
+.reserva-card-body strong {
+    color: #333;
+}
+
+.reserva-card-status {
+    flex: 1; /* Ocupa 1/4 del espacio */
+    min-width: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f9f9f9;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+.status-badge {
+    padding: 10px 20px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 1rem;
+    color: white;
+}
+
+/* Colores de Borde y Badge por Estado */
+.reserva-card.status-pendiente { border-left-color: var(--naranja); }
+.status-badge.status-pendiente { background-color: var(--naranja); }
+
+.reserva-card.status-confirmada { border-left-color: #28a745; } /* Verde */
+.status-badge.status-confirmada { background-color: #28a745; }
+
+.reserva-card.status-cancelada { border-left-color: #dc3545; } /* Rojo */
+.status-badge.status-cancelada { background-color: #dc3545; }
+
+.btn-logout {
+    background: linear-gradient(90deg, #dc3545, #b22a38);
+    color: white;
+    border-radius: 10px;
+    padding: 12px 30px;
+    font-weight: bold;
+    font-size: 18px;
+    transition: transform 0.2s ease;
+    border: none;
+    text-decoration: none;
+    display: inline-block;
+}
+.btn-logout:hover {
+    transform: scale(1.05);
+    color: white;
+}
+
+/* =========================================
+   RESPONSIVE MOBILE - PERFIL
+   ========================================= */
+@media (max-width: 768px) {
+
+    .perfil-hero { padding: 30px 16px; }
+    .perfil-hero h2 { font-size: 1.5rem; }
+    .perfil-avatar { width: 70px; height: 70px; font-size: 1.8rem; }
+
+    .perfil-card { padding: 18px 14px; border-radius: 14px; }
+
+    .reserva-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .table-responsive { font-size: 0.82rem; }
+    .btn { font-size: 0.82rem; padding: 6px 12px; }
+}

@@ -1,0 +1,6 @@
+firebase_credentials.json
+*.json
+.env
+.env.localfirebase_credentials.json
+firebase_credentials.json
+.env

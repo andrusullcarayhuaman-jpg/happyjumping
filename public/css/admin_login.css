@@ -1,0 +1,72 @@
+/*
+ * =========================================
+ * HOJA DE ESTILOS - LOGIN DE ADMIN
+ * =========================================
+ */
+:root {
+    --morado: #7b2ff7;
+    --morado-claro: #f5e7ff;
+    --rosa: #ff3c8d;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    /* Usamos el fondo del dashboard */
+    background: #eafffd; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.login-card {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    padding: 35px 40px;
+    width: 100%;
+    max-width: 450px;
+    text-align: center;
+}
+
+.login-card .logo {
+    width: 120px;
+    margin-bottom: 20px;
+}
+
+.login-card h2 {
+    color: var(--morado);
+    font-weight: 700;
+    margin-bottom: 25px;
+}
+
+.form-control {
+    border-radius: 10px;
+    padding: 12px 15px;
+    border: 2px solid #eee;
+}
+.form-control:focus {
+    border-color: var(--morado);
+    box-shadow: 0 0 10px rgba(123, 47, 247, 0.2);
+}
+
+.btn-login {
+    background: var(--morado);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 12px;
+    font-weight: 600;
+    font-size: 18px;
+    transition: background 0.3s;
+}
+.btn-login:hover {
+    background: #6200c4;
+    color: white;
+}
+
+.alert-danger {
+    font-size: 0.9rem;
+    padding: 10px;
+}

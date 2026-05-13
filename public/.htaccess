@@ -1,0 +1,12 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Si la petición NO es un archivo existente...
+    RewriteCond %{REQUEST_FILENAME} !-f
+    # Si la petición NO es un directorio existente...
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # ...redirige todo a index.php (el cerebro del MVC)
+    # Esto convierte "reservas/finalizar" en "index.php?url=reservas/finalizar"
+    RewriteRule ^(.*)$ index.php?url=$1 [L,QSA]
+</IfModule>

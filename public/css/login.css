@@ -1,0 +1,210 @@
+/*
+ * =========================================
+ * HOJA DE ESTILOS - LOGIN Y REGISTRO
+ * =========================================
+ */
+
+:root {
+    --rosa: #ff3c8d;
+    --celeste: #00c6ff;
+    --amarillo: #ffeb3b;
+    --naranja: #ff8c00;
+    --morado: #7b2ff7;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, var(--celeste), var(--rosa), var(--amarillo));
+    background-size: 300% 300%;
+    animation: fondo 10s ease infinite;
+    /* Usamos min-height para que se ajuste en móviles, 
+      pero height para pantallas grandes
+    */
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+}
+
+@media (min-width: 768px) {
+    body {
+        height: 100vh;
+        overflow: hidden;
+    }
+}
+
+
+@keyframes fondo {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Manchas decorativas (reutilizadas de tu style.css) */
+.paint {
+    position: absolute;
+    background-repeat: no-repeat;
+    background-size: contain;
+    z-index: 0;
+    opacity: 0.9;
+    pointer-events: none;
+    background-image: url('../img/mancha.webp');
+}
+.paint.top-left {
+    top: -60px;
+    left: -20px;
+    width: 250px;
+    height: 250px;
+}
+.paint.bottom-right {
+    bottom: -70px;
+    right: -50px;
+    width: 220px;
+    height: 220px;
+}
+
+
+/* Tarjeta de Login */
+.login-card, .register-card, .recover-card {
+    background: #ffffffdd;
+    padding: 40px 35px;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    width: 100%;
+    max-width: 420px;
+    z-index: 2;
+    position: relative;
+    animation: subir 1s ease-out;
+    margin: 20px 0; /* Margen para móviles */
+}
+
+@keyframes subir {
+    from { transform: translateY(40px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.top-logo {
+    width: 160px;
+    display: block;
+    margin: 0 auto 15px auto;
+}
+
+.title {
+    font-size: 28px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--morado);
+    margin-bottom: 25px;
+}
+
+label {
+    font-weight: 600;
+    color: var(--celeste);
+}
+
+.form-control {
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.form-control:focus {
+    border-color: var(--rosa);
+    box-shadow: 0 0 10px rgba(255, 60, 141, 0.3);
+}
+
+.btn-purple {
+    background: linear-gradient(90deg, var(--morado), var(--rosa));
+    color: white;
+    border-radius: 10px;
+    width: 100%;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 10px;
+    transition: transform 0.2s ease;
+    border: none;
+}
+
+.btn-purple:hover {
+    transform: scale(1.03);
+}
+
+.links {
+    text-align: center;
+    margin-top: 12px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.links a {
+    color: var(--morado);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.links a:hover {
+    color: var(--rosa);
+}
+
+/* --- NUEVOS ESTILOS (Botón de Retroceder) --- */
+.btn-back {
+    position: absolute;
+    top: 25px;
+    left: 25px;
+    z-index: 10;
+    color: white;
+    font-size: 2.5rem; /* Icono grande */
+    font-weight: bold;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    text-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+.btn-back:hover {
+    color: var(--amarillo);
+    transform: scale(1.1);
+}
+
+/* --- NUEVOS ESTILOS (Botón Ver/Ocultar Contraseña) --- */
+.password-wrapper {
+    position: relative;
+}
+.password-toggle-btn {
+    position: absolute;
+    top: 50%;
+    right: 5px; /* Ajuste de posición */
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #aaa;
+    cursor: pointer;
+    padding: 10px;
+    z-index: 3;
+    display: flex; /* Para centrar el icono */
+    align-items: center;
+}
+.password-toggle-btn:hover {
+    color: var(--morado);
+}
+/* Hacemos espacio en el input para el botón */
+.form-control.input-password {
+    padding-right: 45px; 
+}
+/*
+ * =========================================
+ * ESTILOS DE VALIDACIÓN (¡IMPORTANTE!)
+ * =========================================
+ */
+
+.invalid-feedback {
+    display: block !important; /* Fuerza a que el mensaje se muestre */
+    color: var(--rosa) !important; /* Color de error */
+    font-weight: 600;
+    text-align: left; /* Alinea el error a la izquierda */
+    font-size: 0.9rem;
+}
+
+.is-invalid {
+    border-color: var(--rosa) !important; /* Pone el borde del input en rosa */
+    box-shadow: 0 0 10px rgba(255, 60, 141, 0.3) !important; /* Sombra rosa */
+}
