@@ -6,7 +6,7 @@ require_once APP_ROOT . '/views/includes/header.php';
 
 <section class="hero">
     <div class="hero-content">
-        <h1 class="fuente_bouncy">¡Salta hacia la diversión!</h1>
+        <h1 class="fuente_bouncy">¡HOLAAAAAAAAAAAAAAAAA hacia la diversión!</h1>
         <p>Descubre la emoción sin límites en Happy&Jumping, el lugar donde la alegría nunca se detiene.</p>
     </div>
 </section>
