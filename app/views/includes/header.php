@@ -32,7 +32,7 @@ $viewName = basename($_SERVER['PHP_SELF'], '.php');
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="<?php echo URL_ROOT; ?>">Inicio</a>
+                    <a class="nav-link" href="<?php echo URL_ROOT; ?>">Iniciox</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="<?php echo URL_ROOT; ?>/paquetes/entradas">Entradas</a>
