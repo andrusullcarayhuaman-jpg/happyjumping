@@ -1,71 +1,57 @@
 <?php
-/*
-|--------------------------------------------------------------------------
-| Modelo de Usuario (El "Verificador" de Contraseñas)
-|--------------------------------------------------------------------------
-*/
 class UsuarioModel extends Model {
 
     public function __construct() {
         parent::__construct();
     }
 
-    /**
-     * Función de Login
-     * Busca un usuario por email y verifica su contraseña.
-     */
     public function login($correo, $password) {
         $this->query("SELECT * FROM usuarios WHERE correo = :correo");
         $this->bind(':correo', $correo);
-
-        $row = $this->single(); // Obtiene el usuario
-
-        // 1. ¿Encontramos al usuario por su correo?
-        if ($row) {
-            $hashed_password = $row->password;
-            
-            // 2. ¿La contraseña escrita ($password) coincide con la de la BD ($hashed_password)?
-            if (password_verify($password, $hashed_password)) {
-                return $row; // ¡Éxito! Devuelve los datos del usuario
-            } else {
-                return false; // Contraseña incorrecta
-            }
-        } else {
-            return false; // Correo no encontrado
-        }
-    }
-
-    /**
-     * Función de Registro
-     */
-    public function register($datos) {
-        $this->query("INSERT INTO usuarios (nombre, correo, password) VALUES (:nombre, :correo, :password)");
-        
-        $this->bind(':nombre', $datos['nombre']);
-        $this->bind(':correo', $datos['correo']);
-        $this->bind(':password', $datos['password']);
-
-        if ($this->execute()) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * Busca un usuario por su email
-     */
-    public function findUserByEmail($correo) {
-        $this->query("SELECT * FROM usuarios WHERE correo = :correo");
-        $this->bind(':correo', $correo);
-
         $row = $this->single();
+        if ($row && password_verify($password, $row->password)) return $row;
+        return false;
+    }
 
-        if ($this->rowCount() > 0) {
+    public function register($datos) {
+        $this->query("INSERT INTO usuarios (nombre, correo, password, is_verificado, codigo_verificacion)
+                      VALUES (:nombre, :correo, :password, 0, :codigo)");
+        $this->bind(':nombre',  $datos['nombre']);
+        $this->bind(':correo',  $datos['correo']);
+        $this->bind(':password',$datos['password']);
+        $this->bind(':codigo',  $datos['codigo']);
+        return $this->execute();
+    }
+
+    public function verificarCodigo($correo, $codigo) {
+        $this->query("SELECT id_usuario FROM usuarios
+                      WHERE correo = :correo AND codigo_verificacion = :codigo
+                      LIMIT 1");
+        $this->bind(':correo', $correo);
+        $this->bind(':codigo', $codigo);
+        $row = $this->single();
+        if ($row) {
+            $this->query("UPDATE usuarios
+                          SET is_verificado = 1, codigo_verificacion = NULL
+                          WHERE correo = :correo");
+            $this->bind(':correo', $correo);
+            $this->execute();
             return true;
-        } else {
-            return false;
         }
+        return false;
+    }
+
+    public function actualizarCodigo($correo, $codigo) {
+        $this->query("UPDATE usuarios SET codigo_verificacion = :codigo WHERE correo = :correo");
+        $this->bind(':codigo', $codigo);
+        $this->bind(':correo', $correo);
+        return $this->execute();
+    }
+
+    public function findUserByEmail($correo) {
+        $this->query("SELECT id_usuario FROM usuarios WHERE correo = :correo");
+        $this->bind(':correo', $correo);
+        $this->single();
+        return $this->rowCount() > 0;
     }
 }
-?>

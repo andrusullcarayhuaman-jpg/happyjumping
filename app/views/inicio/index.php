@@ -1,4 +1,5 @@
 <?php 
+
 // VISTA DE INICIO (PÁGINA PRINCIPAL)
 // (El header ya se cargó en el paso anterior)
 require_once APP_ROOT . '/views/includes/header.php'; 
