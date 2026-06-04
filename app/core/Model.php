@@ -7,7 +7,7 @@
 | Esto soluciona el error 'Call to a member function on null'.
 |
 */
-
+ 
 class Model {
     
     /*
@@ -20,7 +20,7 @@ class Model {
     protected $dbh; // Database Handler
     protected $stmt; // Statement
     protected $error;
-
+ 
     public function __construct() {
         $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET;
         $options = [
@@ -28,10 +28,12 @@ class Model {
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ,
         ];
-
+ 
         try {
             // Ahora $this->dbh será visible para ReservaModel
             $this->dbh = new PDO($dsn, DB_USER, DB_PASS, $options);
+            // Forzar zona horaria Perú (UTC-5) para todas las consultas
+            $this->dbh->exec("SET time_zone = '-05:00'");
         } catch (PDOException $e) {
             $this->error = $e->getMessage();
             die('Error de conexión a la BD: ' . $this->error);
@@ -42,7 +44,7 @@ class Model {
     public function query($sql) {
         $this->stmt = $this->dbh->prepare($sql);
     }
-
+ 
     /** Vincula los valores (para prevenir inyección SQL) */
     public function bind($param, $value, $type = null) {
         if (is_null($type)) {
@@ -62,23 +64,23 @@ class Model {
         }
         $this->stmt->bindValue($param, $value, $type);
     }
-
+ 
     /** Ejecuta la consulta preparada */
     public function execute() {
         return $this->stmt->execute();
     }
-
+ 
     /** Obtiene un solo registro */
     public function single() {
         $this->execute();
         return $this->stmt->fetch(PDO::FETCH_OBJ);
     }
-
+ 
     /** Obtiene el número de filas afectadas */
     public function rowCount() {
         return $this->stmt->rowCount();
     }
-
+ 
     /** Obtiene TODOS los registros como resultado */
     public function resultSet() {
         $this->execute();
