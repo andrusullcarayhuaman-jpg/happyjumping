@@ -36,20 +36,20 @@ class ReporteController extends Controller {
         $codigos    = $this->reporteModel->getCodigosParaReporte('all');
         $totCod     = $this->reporteModel->getTotalesCodigos();
 
-        // Cálculos contables
-        $ingConf = floatval($totales->ingresos_confirmados ?? 0);
-        $ingPend = 0; $nConf = 0; $nCanc = 0;
+        // Cálculos contables — todos desde las $reservas FILTRADAS por periodo
+        $ingConf = 0; $ingPend = 0; $ingCanc = 0;
+        $nConf = 0;   $nPend  = 0;  $nCanc  = 0;
         foreach ($reservas as $r) {
-            if ($r->estado_pago === 'pendiente')  $ingPend += floatval($r->monto);
-            if ($r->estado_pago === 'confirmada') $nConf++;
-            if ($r->estado_pago === 'cancelada')  $nCanc++;
+            $m = floatval($r->monto);
+            if ($r->estado_pago === 'confirmada') { $ingConf += $m; $nConf++; }
+            if ($r->estado_pago === 'pendiente')  { $ingPend += $m; $nPend++; }
+            if ($r->estado_pago === 'cancelada')  { $ingCanc += $m; $nCanc++; }
         }
-        $nTotal  = intval($totales->total_reservas ?? 0);
-        $nPend   = intval($totales->pendientes ?? 0);
-        $ticket  = $nConf > 0 ? round($ingConf / $nConf, 2) : 0;
-        $tasaConv= $nTotal > 0 ? round($nConf  / $nTotal * 100, 1) : 0;
-        $tasaCanc= $nTotal > 0 ? round($nCanc  / $nTotal * 100, 1) : 0;
-        $sumMonto= array_sum(array_map(fn($r) => floatval($r->monto), $reservas));
+        $nTotal   = count($reservas);
+        $sumMonto = $ingConf + $ingPend + $ingCanc; // suma total del periodo filtrado
+        $ticket   = $nConf > 0 ? round($ingConf / $nConf, 2) : 0;
+        $tasaConv = $nTotal > 0 ? round($nConf  / $nTotal * 100, 1) : 0;
+        $tasaCanc = $nTotal > 0 ? round($nCanc  / $nTotal * 100, 1) : 0;
 
         // ── Helpers ──
         $xe  = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
@@ -118,18 +118,33 @@ class ReporteController extends Controller {
         echo $tr($td('Generado: '.date('d/m/Y H:i:s').'   |   Estado: '.($estado==='all'?'Todos':strtoupper($estado)).'   |   Desde: '.($fecha_desde?:'Sin filtro').'   |   Hasta: '.($fecha_hasta?:'Sin filtro'),'meta',13));
         echo $vr(13);
 
-        // KPIs
+        // ── KPIs fila 1: datos del PERIODO FILTRADO ──
+        $periodoLabel = ($fecha_desde && $fecha_hasta)
+            ? 'Periodo: '.date('d/m/Y',strtotime($fecha_desde)).' al '.date('d/m/Y',strtotime($fecha_hasta))
+            : 'Todos los registros';
+        echo $tr($td('— '.$periodoLabel.' —','nota',13));
         echo $tr(
-            $td('Total Reservas','kpi_lbl',3).'<td style="'.$S['vacio'].'"></td>'.
-            $td('Ingresos Confirmados','kpi_lbl',3).'<td style="'.$S['vacio'].'"></td>'.
-            $td('Pendientes','kpi_lbl',2).'<td style="'.$S['vacio'].'"></td>'.
-            $td('Canceladas','kpi_lbl',2)
+            $td('Reservas en el periodo','kpi_lbl',2).'<td style="'.$S['vacio'].'"></td>'.
+            $td('✔ Ingresos confirmados del periodo','kpi_lbl',3).'<td style="'.$S['vacio'].'"></td>'.
+            $td('⏳ Monto pendiente','kpi_lbl',2).'<td style="'.$S['vacio'].'"></td>'.
+            $td('✘ Canceladas','kpi_lbl',2)
         );
         echo $tr(
-            '<td colspan="3" style="'.$S['kpi_val'].'">'.$nTotal.'</td><td style="'.$S['vacio'].'"></td>'.
+            '<td colspan="2" style="'.$S['kpi_val'].'">'.$nTotal.'</td><td style="'.$S['vacio'].'"></td>'.
             '<td colspan="3" style="'.$S['kpi_mon'].'">'.$mon($ingConf).'</td><td style="'.$S['vacio'].'"></td>'.
-            '<td colspan="2" style="'.$S['kpi_val'].'">'.$nPend.'</td><td style="'.$S['vacio'].'"></td>'.
+            '<td colspan="2" style="'.$S['kpi_val'].'">'.$mon($ingPend).'</td><td style="'.$S['vacio'].'"></td>'.
             '<td colspan="2" style="'.$S['kpi_val'].'">'.$nCanc.'</td>'
+        );
+        echo $vr(13);
+
+        // ── Fila separadora: total general histórico (referencia) ──
+        $ingConfTot = floatval($totales->ingresos_confirmados ?? 0);
+        $S['ref_lbl'] = 'background:#F3E5FF;color:#4A148C;font-size:8pt;font-style:italic;text-align:center;padding:3px;border:1px solid #CE93D8;';
+        $S['ref_val'] = 'background:#F3E5FF;color:#4A148C;font-weight:bold;font-size:9pt;text-align:right;padding:3px;border:1px solid #CE93D8;';
+        echo $tr(
+            '<td colspan="5" style="'.$S['ref_lbl'].'">📊 Total histórico confirmado (todos los periodos, solo referencia):</td>'.
+            '<td colspan="3" style="'.$S['ref_val'].'">'.$mon($ingConfTot).'</td>'.
+            '<td colspan="5" style="'.$S['ref_lbl'].'">Este dato NO corresponde al periodo filtrado arriba</td>'
         );
         echo $vr(13);
 
