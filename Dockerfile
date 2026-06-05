@@ -16,4 +16,4 @@ RUN sed -i 's/AllowOverride None/AllowOverride All/g' \
     /etc/apache2/apache2.conf
 
 # El puerto que expone el contenedor
-EXPOSE 80
+EXPOSE 5000
