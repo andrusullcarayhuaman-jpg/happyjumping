@@ -204,4 +204,136 @@ class AdminController extends Controller {
 
         $this->view('admin/notificaciones', $datos);
     }
+    
+    // ── CORREOS MASIVOS ──────────────────────────────────────────────────────
+    public function correos() {
+        require_once APP_ROOT . '/core/Mailer.php';
+ 
+        $resultado = null;
+        $buscar    = isset($_GET['buscar']) ? trim($_GET['buscar']) : '';
+ 
+        // ─── POST: enviar correos ────────────────────────────────────────────
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['plantilla'])) {
+ 
+            $plantilla   = trim($_POST['plantilla']);
+            $destinatarios_ids = isset($_POST['destinatarios']) ? (array)$_POST['destinatarios'] : [];
+ 
+            // Si se marcó "todos", obtener todos los correos
+            if (isset($_POST['todos']) && $_POST['todos'] === '1') {
+                $clientes = $this->adminModel->getClientesParaCorreo('');
+            } else {
+                // Solo los seleccionados
+                if (empty($destinatarios_ids)) {
+                    $resultado = ['tipo' => 'warning', 'texto' => '⚠️ Debes seleccionar al menos un destinatario.'];
+                    goto render_view;
+                }
+                $clientes_todos = $this->adminModel->getClientesParaCorreo('');
+                $clientes = array_filter($clientes_todos, function($c) use ($destinatarios_ids) {
+                    return in_array($c->id_usuario, $destinatarios_ids);
+                });
+            }
+ 
+            if (empty($clientes)) {
+                $resultado = ['tipo' => 'warning', 'texto' => '⚠️ No hay destinatarios para enviar.'];
+                goto render_view;
+            }
+ 
+            $enviados  = 0;
+            $fallidos  = 0;
+            $asunto_log = '';
+ 
+            foreach ($clientes as $cliente) {
+                try {
+                    $ok = false;
+ 
+                    switch ($plantilla) {
+ 
+                        case 'recordatorio':
+                            // Necesita reserva próxima — buscamos la del cliente
+                            $proximas = $this->adminModel->getClientesConReservaProxima();
+                            $reserva  = null;
+                            foreach ($proximas as $p) {
+                                if ($p->id_usuario == $cliente->id_usuario) { $reserva = $p; break; }
+                            }
+                            if ($reserva) {
+                                $ok = Mailer::enviarRecordatorioReserva($cliente->correo, $cliente->nombre, $reserva);
+                                $asunto_log = '🎂 Recordatorio de reserva próxima';
+                            }
+                            break;
+ 
+                        case 'promo':
+                            $detalle = isset($_POST['detalle_promo']) ? trim($_POST['detalle_promo']) : '';
+                            if (empty($detalle)) { $detalle = '¡Oferta especial disponible esta semana!'; }
+                            $ok = Mailer::enviarPromoEspecial($cliente->correo, $cliente->nombre, $detalle);
+                            $asunto_log = '🎉 Promoción especial';
+                            break;
+ 
+                        case 'codigo':
+                            $codigo     = isset($_POST['codigo_descuento'])    ? strtoupper(trim($_POST['codigo_descuento']))    : 'HAPPY10';
+                            $desc_cod   = isset($_POST['descripcion_codigo'])  ? trim($_POST['descripcion_codigo'])  : '10% de descuento en tu próxima reserva.';
+                            $ok = Mailer::enviarCodigoDescuento($cliente->correo, $cliente->nombre, $codigo, $desc_cod);
+                            $asunto_log = '🎁 Código de descuento: ' . $codigo;
+                            break;
+ 
+                        case 'puntos':
+                            // Intenta usar los puntos del cliente si están disponibles
+                            $puntos = isset($cliente->puntos) ? $cliente->puntos : 0;
+                            $ok = Mailer::enviarRecordatorioPuntos($cliente->correo, $cliente->nombre, $puntos);
+                            $asunto_log = '🏆 Recordatorio de puntos acumulados';
+                            break;
+ 
+                        case 'personalizado':
+                            $asunto_custom = isset($_POST['asunto_custom']) ? trim($_POST['asunto_custom']) : 'Mensaje de Happy Jumping Peru';
+                            $cuerpo_custom = isset($_POST['cuerpo_custom'])  ? trim($_POST['cuerpo_custom'])  : '';
+                            if (empty($cuerpo_custom)) {
+                                $resultado = ['tipo' => 'warning', 'texto' => '⚠️ El cuerpo del mensaje no puede estar vacío.'];
+                                goto render_view;
+                            }
+                            $ok = Mailer::enviarMensajePersonalizado($cliente->correo, $cliente->nombre, $asunto_custom, $cuerpo_custom);
+                            $asunto_log = $asunto_custom;
+                            break;
+                    }
+ 
+                    if ($ok) $enviados++; else $fallidos++;
+ 
+                } catch (Exception $e) {
+                    $fallidos++;
+                }
+            }
+ 
+            // Guardar en historial
+            if ($enviados > 0 && !empty($asunto_log)) {
+                $this->adminModel->guardarHistorialCorreo(
+                    $_SESSION['usuario_id'] ?? 0,
+                    $plantilla,
+                    $enviados,
+                    $asunto_log
+                );
+            }
+ 
+            if ($enviados > 0 && $fallidos === 0) {
+                $resultado = ['tipo' => 'success', 'texto' => "✅ Se enviaron <strong>{$enviados}</strong> correos correctamente."];
+            } elseif ($enviados > 0) {
+                $resultado = ['tipo' => 'warning', 'texto' => "⚠️ Se enviaron <strong>{$enviados}</strong> correos. Fallaron <strong>{$fallidos}</strong>."];
+            } else {
+                $resultado = ['tipo' => 'danger', 'texto' => "❌ No se pudo enviar ningún correo. Revisa la configuración SMTP."];
+            }
+        }
+ 
+        render_view:
+ 
+        $buscar_clientes = isset($_GET['buscar']) ? trim($_GET['buscar']) : '';
+        $clientes_lista  = $this->adminModel->getClientesParaCorreo($buscar_clientes);
+        $historial       = $this->adminModel->getHistorialCorreos();
+ 
+        $datos = [
+            'titulo'   => 'Correos Masivos — Admin',
+            'clientes' => $clientes_lista,
+            'historial'=> $historial,
+            'buscar'   => $buscar_clientes,
+            'resultado'=> $resultado,
+        ];
+ 
+        $this->view('admin/correos', $datos);
+    }
 }

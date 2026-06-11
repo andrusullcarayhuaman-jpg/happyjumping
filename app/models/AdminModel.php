@@ -207,4 +207,94 @@ class AdminModel extends Model {
         $this->bind(':id_codigo', $id_codigo, PDO::PARAM_INT);
         return $this->execute();
     }
+    
+    // ── Correos masivos ──────────────────────────────────────────────────────
+ 
+    /**
+     * Devuelve todos los clientes registrados.
+     * Si $buscar no está vacío, filtra por nombre o correo.
+     */
+    public function getClientesParaCorreo($buscar = '') {
+        $sql = "SELECT u.id_usuario, u.nombre, u.correo,
+                       COUNT(r.id_reserva) AS total_reservas,
+                       COALESCE(SUM(CASE WHEN pg.estado = 'confirmada' THEN 1 ELSE 0 END), 0) AS reservas_confirmadas
+                FROM usuarios u
+                LEFT JOIN reservas r  ON r.id_usuario  = u.id_usuario
+                LEFT JOIN pagos   pg  ON pg.id_reserva = r.id_reserva
+                WHERE u.rol = 'cliente'";
+ 
+        if ($buscar !== '') {
+            $sql .= " AND (u.nombre LIKE :buscar OR u.correo LIKE :buscar)";
+        }
+ 
+        $sql .= " GROUP BY u.id_usuario ORDER BY u.nombre ASC";
+ 
+        $this->query($sql);
+        if ($buscar !== '') {
+            $this->bind(':buscar', '%' . $buscar . '%', PDO::PARAM_STR);
+        }
+        return $this->resultSet();
+    }
+ 
+    /**
+     * Devuelve clientes con reserva confirmada que tengan próxima fecha
+     * (útil para la plantilla de recordatorio).
+     */
+    public function getClientesConReservaProxima() {
+        $this->query("SELECT DISTINCT
+                          u.id_usuario, u.nombre, u.correo,
+                          r.nombre_cumpleanero,
+                          h.fecha,
+                          h.hora_inicio,
+                          p.nombre AS nombre_paquete
+                      FROM usuarios u
+                      INNER JOIN reservas r  ON r.id_usuario  = u.id_usuario
+                      INNER JOIN pagos   pg  ON pg.id_reserva = r.id_reserva
+                      INNER JOIN horarios_disponibles h ON h.id_horario = r.id_horario
+                      INNER JOIN paquetes p ON p.id_paquete = r.id_paquete
+                      WHERE pg.estado = 'confirmada'
+                        AND h.fecha >= CURDATE()
+                      ORDER BY h.fecha ASC");
+        return $this->resultSet();
+    }
+ 
+    /**
+     * Devuelve clientes con puntos suficientes para canjear
+     * (usa la tabla promociones para el umbral mínimo de puntos).
+     */
+    public function getClientesConPuntosCanjeables() {
+        $this->query("SELECT u.id_usuario, u.nombre, u.correo, u.puntos
+                      FROM usuarios u
+                      WHERE u.rol = 'cliente'
+                        AND u.puntos >= (SELECT MIN(puntos_necesarios) FROM promociones)
+                      ORDER BY u.puntos DESC");
+        return $this->resultSet();
+    }
+ 
+    /**
+     * Guarda el historial de correos enviados desde el admin.
+     */
+    public function guardarHistorialCorreo($id_admin, $plantilla, $destinatarios, $asunto) {
+        $this->query("INSERT INTO historial_correos (id_admin, plantilla, destinatarios, asunto, enviado_at)
+                      VALUES (:id_admin, :plantilla, :destinatarios, :asunto, NOW())");
+        $this->bind(':id_admin',      $id_admin,      PDO::PARAM_INT);
+        $this->bind(':plantilla',     $plantilla,     PDO::PARAM_STR);
+        $this->bind(':destinatarios', $destinatarios, PDO::PARAM_INT);
+        $this->bind(':asunto',        $asunto,        PDO::PARAM_STR);
+        return $this->execute();
+    }
+ 
+    /**
+     * Historial de correos enviados (últimos N).
+     */
+    public function getHistorialCorreos($limite = 15) {
+        $this->query("SELECT hc.id, hc.plantilla, hc.destinatarios, hc.asunto, hc.enviado_at,
+                             COALESCE(u.nombre, 'Admin') AS admin_nombre
+                      FROM historial_correos hc
+                      LEFT JOIN usuarios u ON u.id_usuario = hc.id_admin
+                      ORDER BY hc.enviado_at DESC
+                      LIMIT :limite");
+        $this->bind(':limite', $limite, PDO::PARAM_INT);
+        return $this->resultSet();
+    }
 }
