@@ -63,6 +63,8 @@
     <a href="<?php echo URL_ROOT; ?>/admin/reservas"><i class="bi bi-calendar-fill"></i> Reservas</a>
     <a href="<?php echo URL_ROOT; ?>/admin/codigos"><i class="bi bi-ticket-perforated-fill"></i> Códigos</a>
     <a href="<?php echo URL_ROOT; ?>/admin/notificaciones" class="active"><i class="bi bi-bell-fill"></i> Notificaciones</a>
+    <a href="<?php echo URL_ROOT; ?>/admin/correos">        <i class="bi bi-envelope-fill"></i> Correos</a>
+
     <a href="<?php echo URL_ROOT; ?>/usuarios/logout" class="btn btn-logout">Cerrar sesión</a>
 </div>
 
