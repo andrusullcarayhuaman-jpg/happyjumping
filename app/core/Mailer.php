@@ -12,7 +12,7 @@ class Mailer {
         $m->Host       = MAIL_HOST;
         $m->Port       = MAIL_PORT;
         $m->SMTPAuth   = true;
-        $m->SMTPSecure = 'tls';
+        $m->SMTPSecure = defined('MAIL_ENCRYPTION') ? MAIL_ENCRYPTION : 'tls';
         $m->Username   = MAIL_USERNAME;
         $m->Password   = MAIL_PASSWORD;
         $m->From       = MAIL_FROM;
