@@ -12,7 +12,7 @@ class Mailer {
         $m->Host       = MAIL_HOST;
         $m->Port       = MAIL_PORT;
         $m->SMTPAuth   = true;
-        $m->SMTPSecure = 'tls';
+        $m->SMTPSecure = defined('MAIL_ENCRYPTION') ? MAIL_ENCRYPTION : 'tls';
         $m->Username   = MAIL_USERNAME;
         $m->Password   = MAIL_PASSWORD;
         $m->From       = MAIL_FROM;
@@ -93,7 +93,7 @@ class Mailer {
 </body></html>';
         return $m->send();
     }
-    
+
     // ── Plantilla 1: Recordatorio de reserva próxima ─────────────────────────
     public static function enviarRecordatorioReserva($correo, $nombre, $datos_reserva) {
         $m = self::instancia();
@@ -139,7 +139,7 @@ class Mailer {
 </body></html>';
         return $m->send();
     }
- 
+
     // ── Plantilla 2: Promoción especial ──────────────────────────────────────
     public static function enviarPromoEspecial($correo, $nombre, $detalle_promo) {
         $m = self::instancia();
@@ -173,7 +173,7 @@ class Mailer {
 </body></html>';
         return $m->send();
     }
- 
+
     // ── Plantilla 3: Código de descuento ─────────────────────────────────────
     public static function enviarCodigoDescuento($correo, $nombre, $codigo, $descripcion_codigo) {
         $m = self::instancia();
@@ -208,7 +208,7 @@ class Mailer {
 </body></html>';
         return $m->send();
     }
- 
+
     // ── Plantilla 4: Puntos acumulados listos para canjear ───────────────────
     public static function enviarRecordatorioPuntos($correo, $nombre, $puntos) {
         $m = self::instancia();
@@ -243,7 +243,7 @@ class Mailer {
 </body></html>';
         return $m->send();
     }
- 
+
     // ── Plantilla 5: Mensaje personalizado del admin ──────────────────────────
     public static function enviarMensajePersonalizado($correo, $nombre, $asunto, $cuerpo_mensaje) {
         $m = self::instancia();

@@ -207,35 +207,36 @@ class AdminModel extends Model {
         $this->bind(':id_codigo', $id_codigo, PDO::PARAM_INT);
         return $this->execute();
     }
-    
-    // ── Correos masivos ──────────────────────────────────────────────────────
- 
+
+    // ── CORREOS MASIVOS ──────────────────────────────────────────────────────
+
     /**
-     * Devuelve todos los clientes registrados.
+     * Devuelve todos los clientes registrados, con su total de reservas
+     * y sus puntos acumulados (sumados desde la tabla partidas).
      * Si $buscar no está vacío, filtra por nombre o correo.
      */
     public function getClientesParaCorreo($buscar = '') {
         $sql = "SELECT u.id_usuario, u.nombre, u.correo,
-                       COUNT(r.id_reserva) AS total_reservas,
-                       COALESCE(SUM(CASE WHEN pg.estado = 'confirmada' THEN 1 ELSE 0 END), 0) AS reservas_confirmadas
+                       COUNT(DISTINCT r.id_reserva) AS total_reservas,
+                       COALESCE(SUM(pa.puntaje), 0) AS puntos
                 FROM usuarios u
-                LEFT JOIN reservas r  ON r.id_usuario  = u.id_usuario
-                LEFT JOIN pagos   pg  ON pg.id_reserva = r.id_reserva
+                LEFT JOIN reservas r ON r.id_usuario = u.id_usuario
+                LEFT JOIN partidas pa ON pa.id_usuario = u.id_usuario
                 WHERE u.rol = 'cliente'";
- 
+
         if ($buscar !== '') {
             $sql .= " AND (u.nombre LIKE :buscar OR u.correo LIKE :buscar)";
         }
- 
-        $sql .= " GROUP BY u.id_usuario ORDER BY u.nombre ASC";
- 
+
+        $sql .= " GROUP BY u.id_usuario, u.nombre, u.correo ORDER BY u.nombre ASC";
+
         $this->query($sql);
         if ($buscar !== '') {
             $this->bind(':buscar', '%' . $buscar . '%', PDO::PARAM_STR);
         }
         return $this->resultSet();
     }
- 
+
     /**
      * Devuelve clientes con reserva confirmada que tengan próxima fecha
      * (útil para la plantilla de recordatorio).
@@ -257,20 +258,23 @@ class AdminModel extends Model {
                       ORDER BY h.fecha ASC");
         return $this->resultSet();
     }
- 
+
     /**
-     * Devuelve clientes con puntos suficientes para canjear
-     * (usa la tabla promociones para el umbral mínimo de puntos).
+     * Devuelve clientes con puntos suficientes para canjear al menos
+     * una promoción (usa el umbral mínimo registrado en promociones).
      */
     public function getClientesConPuntosCanjeables() {
-        $this->query("SELECT u.id_usuario, u.nombre, u.correo, u.puntos
+        $this->query("SELECT u.id_usuario, u.nombre, u.correo,
+                              COALESCE(SUM(pa.puntaje), 0) AS puntos
                       FROM usuarios u
+                      LEFT JOIN partidas pa ON pa.id_usuario = u.id_usuario
                       WHERE u.rol = 'cliente'
-                        AND u.puntos >= (SELECT MIN(puntos_necesarios) FROM promociones)
-                      ORDER BY u.puntos DESC");
+                      GROUP BY u.id_usuario, u.nombre, u.correo
+                      HAVING puntos >= (SELECT MIN(puntos_necesarios) FROM promociones)
+                      ORDER BY puntos DESC");
         return $this->resultSet();
     }
- 
+
     /**
      * Guarda el historial de correos enviados desde el admin.
      */
@@ -283,7 +287,7 @@ class AdminModel extends Model {
         $this->bind(':asunto',        $asunto,        PDO::PARAM_STR);
         return $this->execute();
     }
- 
+
     /**
      * Historial de correos enviados (últimos N).
      */

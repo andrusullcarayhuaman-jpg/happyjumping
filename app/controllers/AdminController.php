@@ -216,6 +216,7 @@ class AdminController extends Controller {
 
             $plantilla          = trim($_POST['plantilla']);
             $destinatarios_ids  = isset($_POST['destinatarios']) ? (array)$_POST['destinatarios'] : [];
+            $clientes           = [];
 
             // Si se marcó "todos", obtener todos los correos
             if (isset($_POST['todos']) && $_POST['todos'] === '1') {
@@ -223,7 +224,6 @@ class AdminController extends Controller {
             } else {
                 if (empty($destinatarios_ids)) {
                     $resultado = ['tipo' => 'warning', 'texto' => '⚠️ Debes seleccionar al menos un destinatario.'];
-                    $clientes = [];
                 } else {
                     $clientes_todos = $this->adminModel->getClientesParaCorreo('');
                     $clientes = array_filter($clientes_todos, function($c) use ($destinatarios_ids) {
