@@ -65,9 +65,34 @@ class Model {
         $this->stmt->bindValue($param, $value, $type);
     }
  
-    /** Ejecuta la consulta preparada */
+    /** Ejecuta la consulta preparada (con reconexión automática si MySQL cerró la conexión) */
     public function execute() {
-        return $this->stmt->execute();
+        try {
+            return $this->stmt->execute();
+        } catch (PDOException $e) {
+            // Error 2006: MySQL server has gone away (conexión inactiva/cerrada por timeout)
+            // Error 2013: Lost connection to MySQL server during query
+            if (strpos($e->getMessage(), '2006') !== false || strpos($e->getMessage(), '2013') !== false) {
+                $this->reconectar();
+                // El statement original quedó atado a la conexión vieja: hay que re-prepararlo
+                $sql = $this->stmt->queryString;
+                $this->stmt = $this->dbh->prepare($sql);
+                return $this->stmt->execute();
+            }
+            throw $e;
+        }
+    }
+
+    /** Reabre la conexión PDO si se perdió */
+    protected function reconectar() {
+        $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET;
+        $options = [
+            PDO::ATTR_PERSISTENT => true,
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ,
+        ];
+        $this->dbh = new PDO($dsn, DB_USER, DB_PASS, $options);
+        $this->dbh->exec("SET time_zone = '-05:00'");
     }
  
     /** Obtiene un solo registro */

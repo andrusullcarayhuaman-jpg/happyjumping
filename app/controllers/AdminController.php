@@ -242,6 +242,18 @@ class AdminController extends Controller {
                 $fallidos   = 0;
                 $asunto_log = '';
 
+                // Si la plantilla es "recordatorio", traemos TODAS las reservas próximas
+                // de una sola vez ANTES del foreach, para no hacer una query SQL
+                // por cada cliente mientras se están enviando correos por SMTP
+                // (eso agotaba la conexión a la BD y causaba "MySQL server has gone away").
+                $proximas_index = [];
+                if ($plantilla === 'recordatorio') {
+                    $proximas = $this->adminModel->getClientesConReservaProxima();
+                    foreach ($proximas as $p) {
+                        $proximas_index[$p->id_usuario] = $p;
+                    }
+                }
+
                 foreach ($clientes as $cliente) {
                     try {
                         $ok = false;
@@ -249,11 +261,7 @@ class AdminController extends Controller {
                         switch ($plantilla) {
 
                             case 'recordatorio':
-                                $proximas = $this->adminModel->getClientesConReservaProxima();
-                                $reserva  = null;
-                                foreach ($proximas as $p) {
-                                    if ($p->id_usuario == $cliente->id_usuario) { $reserva = $p; break; }
-                                }
+                                $reserva = isset($proximas_index[$cliente->id_usuario]) ? $proximas_index[$cliente->id_usuario] : null;
                                 if ($reserva) {
                                     $ok = Mailer::enviarRecordatorioReserva($cliente->correo, $cliente->nombre, $reserva);
                                     $asunto_log = '🎂 Recordatorio de reserva próxima';
