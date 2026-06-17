@@ -1,15 +1,11 @@
 <?php
 // ============================================================
-// CONFIGURACIÓN DE CORREO - Hostinger SMTP
-// ============================================================
-// IMPORTANTE: reemplaza MAIL_PASSWORD con la contraseña real
-// del buzón atencion@happyjumpingperu.com que creaste en hPanel.
+// CONFIGURACIÓN DE CORREO - Gmail SMTP
 // ============================================================
 
-define('MAIL_HOST',     'smtp.hostinger.com');
-define('MAIL_PORT',     465);
-define('MAIL_ENCRYPTION', 'ssl');               // Hostinger usa SSL en el puerto 465
-define('MAIL_USERNAME', 'atencion@happyjumpingperu.com');
-define('MAIL_PASSWORD', 'adminHJ123_');
-define('MAIL_FROM',     'atencion@happyjumpingperu.com');
+define('MAIL_HOST',     'smtp.gmail.com');
+define('MAIL_PORT',     587);
+define('MAIL_USERNAME', 'happyjumpingperu01@gmail.com');
+define('MAIL_PASSWORD', 'cjgejpnldopkegbk');   // contraseña de aplicación sin espacios
+define('MAIL_FROM',     'happyjumpingperu01@gmail.com');
 define('MAIL_NAME',     'Happy Jumping Peru');
