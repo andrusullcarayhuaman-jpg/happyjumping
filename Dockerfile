@@ -15,27 +15,37 @@ RUN apt-get update && apt-get install -y \
 # Habilitar mod_rewrite para .htaccess
 RUN a2enmod rewrite
 
-# ✅ CLAVE: Cambiar Apache de puerto 80 → 8080 (Cloud Run lo requiere)
+# Cambiar Apache de puerto 80 → 8080 (Cloud Run lo requiere)
 RUN sed -i 's/Listen 80/Listen 8080/' /etc/apache2/ports.conf && \
     sed -i 's/<VirtualHost \*:80>/<VirtualHost *:8080>/' /etc/apache2/sites-enabled/000-default.conf
 
 # Copiar proyecto
 COPY . /var/www/html/
 
-# Definir public como raíz web
-ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
-    /etc/apache2/sites-available/*.conf \
-    /etc/apache2/apache2.conf \
-    /etc/apache2/conf-available/*.conf
+# Document root = raíz del proyecto (el .htaccess redirige a /public/)
+RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html|g' \
+    /etc/apache2/sites-available/000-default.conf
 
-# AllowOverride para que funcione el .htaccess del MVC
-RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' \
+# AllowOverride All para la raíz Y para public/
+RUN sed -i 's|<Directory /var/www/>|<Directory /var/www/html/>|g' /etc/apache2/apache2.conf && \
+    sed -i '/<Directory \/var\/www\/html\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' \
     /etc/apache2/apache2.conf
 
+# Agregar bloque explícito por si acaso
+RUN echo '\n<Directory /var/www/html>\n\
+    Options FollowSymLinks\n\
+    AllowOverride All\n\
+    Require all granted\n\
+</Directory>\n\
+<Directory /var/www/html/public>\n\
+    Options FollowSymLinks\n\
+    AllowOverride All\n\
+    Require all granted\n\
+</Directory>' >> /etc/apache2/apache2.conf
+
 # Permisos
-RUN chown -R www-data:www-data /var/www/html
-RUN chmod -R 755 /var/www/html
+RUN chown -R www-data:www-data /var/www/html && \
+    chmod -R 755 /var/www/html
 
 WORKDIR /var/www/html
 
