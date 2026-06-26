@@ -15,24 +15,34 @@ RUN a2enmod rewrite
 # Copiar proyecto
 COPY . /var/www/html/
 
-# Crear VirtualHost personalizado limpio
-RUN echo '<VirtualHost *:8080>\n\
+# Escribir VirtualHost completamente limpio en puerto 8080
+RUN printf '<VirtualHost *:8080>\n\
+    ServerAdmin webmaster@localhost\n\
     DocumentRoot /var/www/html\n\
+    \n\
+    <Directory />\n\
+        Options FollowSymLinks\n\
+        AllowOverride None\n\
+        Require all denied\n\
+    </Directory>\n\
+    \n\
     <Directory /var/www/html>\n\
-        Options FollowSymLinks\n\
+        Options Indexes FollowSymLinks MultiViews\n\
         AllowOverride All\n\
         Require all granted\n\
     </Directory>\n\
+    \n\
     <Directory /var/www/html/public>\n\
-        Options FollowSymLinks\n\
+        Options Indexes FollowSymLinks MultiViews\n\
         AllowOverride All\n\
         Require all granted\n\
     </Directory>\n\
+    \n\
     ErrorLog ${APACHE_LOG_DIR}/error.log\n\
     CustomLog ${APACHE_LOG_DIR}/access.log combined\n\
-</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
+</VirtualHost>\n' > /etc/apache2/sites-available/000-default.conf
 
-# Cambiar puerto de Apache a 8080
+# Cambiar puerto de escucha a 8080
 RUN sed -i 's/Listen 80/Listen 8080/' /etc/apache2/ports.conf
 
 # Permisos
