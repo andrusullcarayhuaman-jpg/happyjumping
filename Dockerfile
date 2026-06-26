@@ -15,34 +15,28 @@ RUN a2enmod rewrite
 # Copiar proyecto
 COPY . /var/www/html/
 
-# Escribir VirtualHost completamente limpio en puerto 8080
+# VirtualHost con DocumentRoot en /public directamente
+# y la regla de rewrite embebida en el VirtualHost (no depende del .htaccess raíz)
 RUN printf '<VirtualHost *:8080>\n\
     ServerAdmin webmaster@localhost\n\
-    DocumentRoot /var/www/html\n\
-    \n\
-    <Directory />\n\
-        Options FollowSymLinks\n\
-        AllowOverride None\n\
-        Require all denied\n\
-    </Directory>\n\
-    \n\
-    <Directory /var/www/html>\n\
-        Options Indexes FollowSymLinks MultiViews\n\
-        AllowOverride All\n\
-        Require all granted\n\
-    </Directory>\n\
+    DocumentRoot /var/www/html/public\n\
     \n\
     <Directory /var/www/html/public>\n\
-        Options Indexes FollowSymLinks MultiViews\n\
+        Options FollowSymLinks\n\
         AllowOverride All\n\
         Require all granted\n\
+        \n\
+        RewriteEngine On\n\
+        RewriteCond %%{REQUEST_FILENAME} !-f\n\
+        RewriteCond %%{REQUEST_FILENAME} !-d\n\
+        RewriteRule ^(.*)$ index.php?url=$$1 [QSA,L]\n\
     </Directory>\n\
     \n\
     ErrorLog ${APACHE_LOG_DIR}/error.log\n\
     CustomLog ${APACHE_LOG_DIR}/access.log combined\n\
 </VirtualHost>\n' > /etc/apache2/sites-available/000-default.conf
 
-# Cambiar puerto de escucha a 8080
+# Cambiar puerto a 8080
 RUN sed -i 's/Listen 80/Listen 8080/' /etc/apache2/ports.conf
 
 # Permisos
