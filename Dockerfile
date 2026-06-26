@@ -15,16 +15,23 @@ RUN apt-get update && apt-get install -y \
 # Habilitar mod_rewrite para .htaccess
 RUN a2enmod rewrite
 
+# ✅ CLAVE: Cambiar Apache de puerto 80 → 8080 (Cloud Run lo requiere)
+RUN sed -i 's/Listen 80/Listen 8080/' /etc/apache2/ports.conf && \
+    sed -i 's/<VirtualHost \*:80>/<VirtualHost *:8080>/' /etc/apache2/sites-enabled/000-default.conf
+
 # Copiar proyecto
 COPY . /var/www/html/
 
 # Definir public como raíz web
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
-
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
     /etc/apache2/sites-available/*.conf \
     /etc/apache2/apache2.conf \
     /etc/apache2/conf-available/*.conf
+
+# AllowOverride para que funcione el .htaccess del MVC
+RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' \
+    /etc/apache2/apache2.conf
 
 # Permisos
 RUN chown -R www-data:www-data /var/www/html
