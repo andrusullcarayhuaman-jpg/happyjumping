@@ -32,4 +32,4 @@ RUN chmod -R 755 /var/www/html
 
 WORKDIR /var/www/html
 
-EXPOSE 80
+EXPOSE 8080
